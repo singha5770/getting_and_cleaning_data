@@ -1,6 +1,6 @@
 ##Getting and cleaning data project
 
-setwd("C:/Users/aman/Documents/Courses/Coursera/Data Science specialization/3-Getting and cleaning data/R Working Directory- getting and cleaning data/ProjectWork/UCI HAR Dataset")
+setwd("C:/Users/aman/Documents/Courses/Coursera/Data Science specialization/3-Getting and cleaning data/R Working Directory- getting and cleaning data/ProjectWork")
 if(!file.exists("ProjectData.zip")){
   fileUrl<- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
   download.file(fileUrl, destfile = "projectData.zip")
@@ -79,7 +79,7 @@ colNames = colnames(finalData);
 
 #cleaning up variable names
 for(i in 1:length(colNames)){
-    colNames[i] = gsub("()","",colNames[i])
+    colNames[i] = gsub("\\()","",colNames[i])
     colNames[i] = gsub("-std","StdDev",colNames[i])
     colNames[i] = gsub("-mean","Mean",colNames[i])
     colNames[i] = gsub("^(t)","time",colNames[i])
@@ -100,12 +100,16 @@ colnames(finalData) = colNames
 
 #Creating a data set without activity_type column
 finalDataNoActivityType = finalData[,names(finalData) != 'activityType']
-  
-library(plyr)
-averages_data <- ddply(finalDataNoActivityType, .(subjectId, activityId), function(x) colMeans(x[, 1:66]))
 
+#summarizing the data by activityId and subjectId
+tidyData    = aggregate(finalDataNoActivityType[,names(finalDataNoActivityType) != c('activityId','subjectId')],by=list(activityId=finalDataNoActivityType$activityId,subjectId = finalDataNoActivityType$subjectId),mean);
 
+#merging activityType
+tidyData = merge(tidyData,activityType,by='activityId',all.x=TRUE);
+
+#writting into a table
 setwd("C:/Users/aman/Documents/Courses/Coursera/Data Science specialization/3-Getting and cleaning data/R Working Directory- getting and cleaning data/ProjectWork")
 
-write.table(averages_data, "averages_data.txt", row.name=FALSE)
+if(!file.exists("tidyData.txt")){
+write.table(tidyData, './tidyData.txt',row.names=TRUE,sep='\t')};
 
